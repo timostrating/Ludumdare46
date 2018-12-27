@@ -1,0 +1,6 @@
+[submodule "lib/libtonc"]
+	path = lib/libtonc
+	url = git@github.com:devkitPro/libtonc.git
+[submodule "lib/minunit"]
+	path = lib/minunit
+	url = git@github.com:jeradesign/MinUnit.git
