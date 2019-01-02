@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 find_all_test_files() {
-    echo $(find ../../source/app -type f -name '*.test.c')
+    echo $(find $APP_PATH -type f -name '*.test.c')
 }
 
 find_all_test_names() {
@@ -32,6 +32,10 @@ APP_PATH=../../source/app
 if [ "$1" != "" ]; then
     APP_PATH=$1
 fi
+OUT_PATH=$APP_PATH
+if [ "$2" != "" ]; then
+    OUT_PATH=$2
+fi
 echo "[INFO] - Searching $APP_PATH..."
 TEST_FILES=$(find_all_test_files)
 TEST_NAMES=$(find_all_test_names $TEST_FILES)
@@ -43,20 +47,25 @@ TEST_DEFINES=$(make_test_defines $TEST_NAMES)
 TEST_CALLS=$(make_test_calls "$TEST_NAMES")
 
 echo $(
-echo "void print(char* text);"
-echo "$TEST_DEFINES"
-echo "char* allTests()"
-echo "{"
-echo "$TEST_CALLS"
-echo "return 0;"
-echo "}"
-echo "int main()"
-echo "{"
-echo "char* result = allTests();"
-echo "if (result != 0)"
-echo "printf(\"%s\n\", result);"
-echo "else"
-echo "printf(\"ALL TESTS PASSED\n\");"
-echo "while(1);"
-echo "}") > main.c
-
+echo "// Generated main file"$'\r'
+echo "#include <stdio.h>"$'\r'
+echo "#include \"../../lib/libtonc/include/tonc.h\""$'\r'
+echo "#include \"../../lib/minunit/minunit.h\""$'\r'
+echo "$TEST_DEFINES"$'\r'
+echo "char* allTests()"$'\r'
+echo "{"$'\r'
+echo "$TEST_CALLS"$'\r'
+echo "return 0;"$'\r'
+echo "}"$'\r'
+echo "int main()"$'\r'
+echo "{"$'\r'
+echo "tte_init_se_default(0, BG_CBB(0)|BG_SBB(31));"$'\r'
+echo "tte_init_con();"$'\r'
+echo "char* result = allTests();"$'\r'
+echo "if (result != 0)"$'\r'
+echo "tte_printf(\"%s\n\", result);"$'\r'
+echo "else"$'\r'
+echo "tte_printf(\"ALL TESTS PASSED\n\");"$'\r'
+echo "while(1);"$'\r'
+echo "}"$'\r') > $OUT_PATH/main.test.c
+echo "[INFO] - Wrote main test file to $OUT_PATH!"
