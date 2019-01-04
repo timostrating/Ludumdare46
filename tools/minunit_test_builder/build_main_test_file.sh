@@ -49,7 +49,7 @@ TEST_CALLS=$(make_test_calls "$TEST_NAMES")
 echo "// Generated main test file" > $OUT_PATH/main.test.c
 echo "#include <stdio.h>" >> $OUT_PATH/main.test.c
 echo "#include \"tonc.h\"" >> $OUT_PATH/main.test.c
-echo "#include \"../../lib/minunit/minunit.h\"" >> $OUT_PATH/main.test.c
+echo "#include \"minunit.h\"" >> $OUT_PATH/main.test.c
 echo "int tests_run = 0;" >> $OUT_PATH/main.test.c
 echo "$TEST_DEFINES" >> $OUT_PATH/main.test.c
 echo "char* allTests()" >> $OUT_PATH/main.test.c

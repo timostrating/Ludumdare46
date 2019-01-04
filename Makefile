@@ -19,9 +19,10 @@ OBJCOPY	:= $(CROSS)objcopy
 
 ARCH	:= -mthumb-interwork -mthumb
 
-LIBFLAGS := -I$(DEVKITPRO)/libtonc/include -L$(DEVKITPRO)/libtonc/lib -ltonc
+INCFLAGS := -I$(LIB_DIR)/libtonc/include -I$(LIB_DIR)/minunit
+LIBFLAGS := -L$(LIB_DIR)/libtonc/lib -ltonc
 ASFLAGS	:= -mthumb-interwork
-CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(LIBFLAGS)
+CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(INCFLAGS) $(LIBFLAGS)
 LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
 
 # Find and predetermine all relevant source files
