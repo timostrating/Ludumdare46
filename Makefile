@@ -43,7 +43,7 @@ build : $(NAME).elf
 
 test : $(NAME)-test.elf
 
-$(NAME).elf : $(APP_OBJECTS) $(APP_MAIN_SOURCE)
+$(NAME).elf : $(APP_OBJECTS) $(APP_MAIN_OBJECT)
 	$(LD) $^ $(LDFLAGS) -o $@
 
 $(NAME)-test.elf : $(APP_OBJECTS) $(TEST_OBJECTS) $(TEST_MAIN_OBJECT)

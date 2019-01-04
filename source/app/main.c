@@ -1,8 +1,19 @@
 #include "./main.h"
+#include <stdio.h>
+#include "tonc.h"
 
-int main() 
+int main()
 {
     int result = foo();
-    result += bar(3, 4);
+    result += bar(3, 2);
+
+    REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
+    tte_init_se_default(0, BG_CBB(0)|BG_SBB(31));
+    tte_init_con();
+
+    tte_printf("Hello, World!\n\n");
+    tte_printf("The result = %d.\n\n", result);
+    tte_printf("Kind regards,\nLuc van den Brand.");
+
     while(1);
 }
