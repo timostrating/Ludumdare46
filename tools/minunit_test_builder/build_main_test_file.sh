@@ -68,7 +68,7 @@ echo "  char* result = allTests();" >> $OUT_PATH/main.test.c
 echo "  if (result != 0)" >> $OUT_PATH/main.test.c
 echo "    tte_printf(\"FAIL: %s\n\", result);" >> $OUT_PATH/main.test.c
 echo "  else" >> $OUT_PATH/main.test.c
-echo "    tte_printf(\"ALL TESTS PASSED!\n\");" >> $OUT_PATH/main.test.c
+echo "    tte_printf(\"ALL %d TESTS PASSED!\n\", tests_run);" >> $OUT_PATH/main.test.c
 echo "  while(1);" >> $OUT_PATH/main.test.c
 echo "}" >> $OUT_PATH/main.test.c
 
