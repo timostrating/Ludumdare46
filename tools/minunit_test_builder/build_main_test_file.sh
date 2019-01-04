@@ -49,7 +49,7 @@ TEST_CALLS=$(make_test_calls "$TEST_NAMES")
 echo $(
 echo "// Generated main file"$'\r'
 echo "#include <stdio.h>"$'\r'
-echo "#include \"../../lib/libtonc/include/tonc.h\""$'\r'
+echo "#include \"tonc.h\""$'\r'
 echo "#include \"../../lib/minunit/minunit.h\""$'\r'
 echo "$TEST_DEFINES"$'\r'
 echo "char* allTests()"$'\r'

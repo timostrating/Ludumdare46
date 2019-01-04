@@ -19,11 +19,12 @@ OBJCOPY	:= $(CROSS)objcopy
 
 ARCH	:= -mthumb-interwork -mthumb
 
+LIBFLAGS := -I$(DEVKITPRO)/libtonc/include -L$(DEVKITPRO)/libtonc/lib -ltonc
 ASFLAGS	:= -mthumb-interwork
-CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing
-LDFLAGS	:= $(ARCH) $(SPECS)
+CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(LIBFLAGS)
+LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
 
-# Find and predetermine all relevant files
+# Find and predetermine all relevant source files
 
 APP_MAIN_SOURCE := $(shell find $(SOURCE_DIR)/app -name '*main.c')
 APP_MAIN_OBJECT:= $(APP_MAIN_SOURCE:%.c=%.o)
@@ -62,12 +63,13 @@ $(TEST_MAIN_OBJECT) : $(TEST_MAIN_SOURCE)
 $(TEST_MAIN_SOURCE) : $(TEST_OBJECTS)
 	$(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh $(SOURCE_DIR)/app
 
+libtonc.a :
+
 clean :
 	@rm -fv *.gba
 	@rm -fv *.elf
 	@rm -fv *.sav
 	@rm -fv *.gbfs
-	@rm -rf $(APP_OBJECTS) $(TEST_OBJECTS) 
+	@rm -rf $(APP_OBJECTS) $(TEST_OBJECTS)
 	@rm -rf $(APP_MAIN_OBJECT) $(TEST_MAIN_OBJECT)
 	@rm -rf $(TEST_MAIN_SOURCE)
-
