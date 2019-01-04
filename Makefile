@@ -61,7 +61,7 @@ $(TEST_OBJECTS) : %.o : %.c
 $(TEST_MAIN_OBJECT) : $(TEST_MAIN_SOURCE)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TEST_MAIN_SOURCE) : $(TEST_OBJECTS)
+$(TEST_MAIN_SOURCE) : $(TEST_OBJECTS) $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh 
 	$(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh $(SOURCE_DIR)/app
 
 libtonc.a :
