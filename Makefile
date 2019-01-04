@@ -25,17 +25,26 @@ ASFLAGS	:= -mthumb-interwork
 CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(INCFLAGS) $(LIBFLAGS)
 LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
 
+# Find all additional build tools
+
+BUILD_MAIN_TEST_FILE := $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh
+TILED2GBA := $(TOOLS_DIR)/tiled2gba/build/tiled2gba
+
 # Find and predetermine all relevant source files
 
 APP_MAIN_SOURCE := $(shell find $(SOURCE_DIR)/app -name '*main.c')
-APP_MAIN_OBJECT:= $(APP_MAIN_SOURCE:%.c=%.o)
-APP_SOURCES   := $(shell find $(SOURCE_DIR)/app -name '*.c' ! -name "*main.c"  ! -name "*.test.c")
-APP_OBJECTS   := $(APP_SOURCES:%.c=%.o)
+APP_MAIN_OBJECT := $(APP_MAIN_SOURCE:%.c=%.o)
+APP_SOURCES     := $(shell find $(SOURCE_DIR)/app -name '*.c' ! -name "*main.c"  ! -name "*.test.c")
+APP_OBJECTS     := $(APP_SOURCES:%.c=%.o)
 
 TEST_MAIN_SOURCE := $(SOURCE_DIR)/app/main.test.c
-TEST_MAIN_OBJECT:= $(TEST_MAIN_SOURCE:%.c=%.o)
-TEST_SOURCES   := $(shell find $(SOURCE_DIR)/app -name '*.test.c' ! -name "*main.test.c")
-TEST_OBJECTS   := $(TEST_SOURCES:%.c=%.o)
+TEST_MAIN_OBJECT := $(TEST_MAIN_SOURCE:%.c=%.o)
+TEST_SOURCES     := $(shell find $(SOURCE_DIR)/app -name '*.test.c' ! -name "*main.test.c")
+TEST_OBJECTS     := $(TEST_SOURCES:%.c=%.o)
+
+GBFS_OUT     := $(BUILD_DIR)/content.gbfs
+MAP_ASSETS   := $(shell find $(SOURCE_DIR)/assets -name '*.tmx')
+MAP_BINARIES := $(MAP_ASSETS:%.tmx=%.bin)
 
 # Build commands and dependencies
 
@@ -61,10 +70,14 @@ $(TEST_OBJECTS) : %.o : %.c
 $(TEST_MAIN_OBJECT) : $(TEST_MAIN_SOURCE)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TEST_MAIN_SOURCE) : $(TEST_OBJECTS) $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh 
-	$(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh $(SOURCE_DIR)/app
+$(TEST_MAIN_SOURCE) : $(TEST_OBJECTS) $(BUILD_MAIN_TEST_FILE)
+	$(BUILD_MAIN_TEST_FILE) $(SOURCE_DIR)/app
 
-libtonc.a :
+$(GBFS_OUT) : $(MAP_BINARIES)
+	gbfs $(GBFS_OUT) $(MAP_BINARIES)
+
+$(MAP_BINARIES) : %.bin : %.tmx
+	$(TILED2GBA) $< $@ --binary
 
 clean :
 	@rm -fv *.gba
