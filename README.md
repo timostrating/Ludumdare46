@@ -14,7 +14,7 @@ The `tools` folder contains all tools that ease development, and the `lib` folde
 This project has been configured for **Linux**, and will most probably not work in other environments without tweaking.
 In order to be able to build this project, you will need to perform the following steps:
 
-1. **Install DevkitPro** for the GBA and setup the right environment variables (see the Makefile).
+1. **Install DevkitPro** for the GBA and setup the right environment variables (see [this guide](https://www.coranac.com/tonc/text/setup.htm))
 2. **Make sure all submodules are present** by calling `git submodule update --init`.
 3. **Build libtonc**, which is the core GBA library the project uses.
   1. Open a terminal in `lib\libtonc`.
