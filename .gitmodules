@@ -4,3 +4,6 @@
 [submodule "lib/minunit"]
 	path = lib/minunit
 	url = git@github.com:jeradesign/MinUnit.git
+[submodule "tools/tiled2gba"]
+	path = tools/tiled2gba
+	url = git@github.com:LucvandenBrand/Tiled2GBA.git
