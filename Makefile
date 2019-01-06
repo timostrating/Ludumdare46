@@ -25,6 +25,8 @@ ASFLAGS	:= -mthumb-interwork
 CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(INCFLAGS) $(LIBFLAGS)
 LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
 
+.PHONY : build clean
+
 # Find all additional build tools
 
 BUILD_MAIN_TEST_FILE := $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh
