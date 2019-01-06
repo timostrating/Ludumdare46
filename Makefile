@@ -28,7 +28,7 @@ LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
 # Find all additional build tools
 
 BUILD_MAIN_TEST_FILE := $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh
-TILED2GBA := $(TOOLS_DIR)/tiled2gba/build/tiled2gba
+TILED2GBA := $(TOOLS_DIR)/tiled2gba/build/Tiled2GBA
 
 # Find and predetermine all relevant source files
 
@@ -42,15 +42,23 @@ TEST_MAIN_OBJECT := $(TEST_MAIN_SOURCE:%.c=%.o)
 TEST_SOURCES     := $(shell find $(SOURCE_DIR)/app -name '*.test.c' ! -name "*main.test.c")
 TEST_OBJECTS     := $(TEST_SOURCES:%.c=%.o)
 
-GBFS_OUT     := $(BUILD_DIR)/content.gbfs
+GBFS_OUT     := content.gbfs
 MAP_ASSETS   := $(shell find $(SOURCE_DIR)/assets -name '*.tmx')
 MAP_BINARIES := $(MAP_ASSETS:%.tmx=%.bin)
 
 # Build commands and dependencies
 
-build : $(NAME).elf
+build : $(NAME).gba
 
 test : $(NAME)-test.elf
+
+$(NAME).gba : $(NAME)-no_content.gba $(GBFS_OUT)
+	cat $^ > $@
+
+$(NAME)-no_content.gba : $(NAME).elf
+	$(OBJCOPY) -v -O binary $< $@
+	-@gbafix $@ -t$(NAME)
+	padbin 256 $@ 
 
 $(NAME).elf : $(APP_OBJECTS) $(APP_MAIN_OBJECT)
 	$(LD) $^ $(LDFLAGS) -o $@
@@ -74,7 +82,7 @@ $(TEST_MAIN_SOURCE) : $(TEST_OBJECTS) $(BUILD_MAIN_TEST_FILE)
 	$(BUILD_MAIN_TEST_FILE) $(SOURCE_DIR)/app
 
 $(GBFS_OUT) : $(MAP_BINARIES)
-	gbfs $(GBFS_OUT) $(MAP_BINARIES)
+	gbfs $@ $^
 
 $(MAP_BINARIES) : %.bin : %.tmx
 	$(TILED2GBA) $< $@ --binary
@@ -84,6 +92,7 @@ clean :
 	@rm -fv *.elf
 	@rm -fv *.sav
 	@rm -fv *.gbfs
+	@rm -fv $(MAP_BINARIES)
 	@rm -rf $(APP_OBJECTS) $(TEST_OBJECTS)
 	@rm -rf $(APP_MAIN_OBJECT) $(TEST_MAIN_OBJECT)
 	@rm -rf $(TEST_MAIN_SOURCE)
