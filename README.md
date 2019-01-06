@@ -19,6 +19,10 @@ In order to be able to build this project, you will need to perform the followin
 3. **Build libtonc**, which is the core GBA library the project uses.
   1. Open a terminal in `lib\libtonc`.
   2. Build the library by calling `make`.
+4. **Build Tiled2GBA**, which is the map converted for .tmx files.
+  1. Open the `tools\tiled2gba` folder.
+  2. Follow it's readme instructions.
+  3. You should have the compiled binary in `tools\tiled2gba\build`.
 
 After this, you should be ready to build the project.
 
