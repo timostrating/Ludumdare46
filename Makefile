@@ -52,10 +52,15 @@ MAP_BINARIES := $(MAP_ASSETS:%.tmx=%.bin)
 
 build : $(NAME).gba
 
-test : $(NAME)-test.elf
+test : $(NAME)-test.gba
 
 $(NAME).gba : $(NAME)-no_content.gba $(GBFS_OUT)
 	cat $^ > $@
+
+$(NAME)-test.gba : $(NAME)-test.elf
+	$(OBJCOPY) -v -O binary $< $@
+	-@gbafix $@ -t$(NAME)
+	padbin 256 $@ 
 
 $(NAME)-no_content.gba : $(NAME).elf
 	$(OBJCOPY) -v -O binary $< $@
