@@ -13,7 +13,11 @@ SPECS      := -specs=gba.specs
 
 BUILD_MAIN_TEST_FILE := $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh
 TILED2GBA_DIR := $(TOOLS_DIR)/tiled2gba
-TILED2GBA := $(TILED2GBA_DIR)/build/Tiled2GBA
+TILED2GBA_CONVERTER_DIR := $(TILED2GBA_DIR)/converter
+TILED2GBA_CONVERTER := $(TILED2GBA_CONVERTER_DIR)/build/Tiled2GBA
+TILED2GBA_PLAYER_DIR := $(TILED2GBA_DIR)/player
+TILED2GBA_PLAYER_LIB := $(TILED2GBA_PLAYER_DIR)/lib/gbaMap
+
 MIDI2GBA_DIR := $(TOOLS_DIR)/midi2gba
 MIDI2GBA_CONVERTER_DIR := $(MIDI2GBA_DIR)/converter
 MIDI2GBA_CONVERTER := $(MIDI2GBA_CONVERTER_DIR)/build/MIDI2GBA
@@ -30,8 +34,8 @@ OBJCOPY	:= $(CROSS)objcopy
 
 ARCH	:= -mthumb-interwork -mthumb
 
-INCFLAGS := -I$(LIB_DIR)/libtonc/include -I$(LIB_DIR)/minunit -I$(MIDI2GBA_PLAYER_LIB)/include
-LIBFLAGS := -L$(LIB_DIR)/libtonc/lib -ltonc -L$(MIDI2GBA_PLAYER_LIB)/lib -lgbaAudio
+INCFLAGS := -I$(LIB_DIR)/libtonc/include -I$(LIB_DIR)/minunit -I$(MIDI2GBA_PLAYER_LIB)/include -I$(TILED2GBA_PLAYER_LIB)/include
+LIBFLAGS := -L$(LIB_DIR)/libtonc/lib -ltonc -L$(MIDI2GBA_PLAYER_LIB)/lib -lgbaAudio -L$(TILED2GBA_PLAYER_LIB)/lib -lgbaMap
 ASFLAGS	:= -mthumb-interwork
 CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(INCFLAGS) $(LIBFLAGS)
 LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
@@ -63,7 +67,7 @@ build : libs $(NAME).gba
 
 test : libs $(NAME)-test.gba
 
-libs: $(MIDI2GBA_PLAYER_LIB) $(LIB_DIR)/libtonc
+libs: $(MIDI2GBA_PLAYER_LIB) $(TILED2GBA_PLAYER_LIB) $(LIB_DIR)/libtonc
 
 $(NAME).gba : $(NAME)-no_content.gba $(GBFS_OUT)
 	cat $^ > $@
@@ -102,13 +106,18 @@ $(TEST_MAIN_SOURCE) : $(TEST_OBJECTS) $(BUILD_MAIN_TEST_FILE)
 $(GBFS_OUT) : $(MAP_BINARIES) $(MIDI_BINARIES)
 	gbfs $@ $^
 
-$(MAP_BINARIES) : %.bin : %.tmx $(TILED2GBA)
-	$(TILED2GBA) $< $@ --binary
+$(MAP_BINARIES) : %.bin : %.tmx $(TILED2GBA_CONVERTER)
+	$(TILED2GBA_CONVERTER) $< $@ --binary
 
-$(TILED2GBA):
-	mkdir $(TILED2GBA_DIR)/build
-	cd $(TILED2GBA_DIR)/build && cmake ..
-	cd $(TILED2GBA_DIR)/build && make
+$(TILED2GBA_CONVERTER):
+	mkdir $(TILED2GBA_CONVERTER_DIR)/build
+	cd $(TILED2GBA_CONVERTER_DIR)/build && cmake ..
+	cd $(TILED2GBA_CONVERTER_DIR)/build && make
+
+$(TILED2GBA_PLAYER_LIB): $(TILED2GBA_PLAYER_LIB)/lib
+
+$(TILED2GBA_PLAYER_LIB)/lib:
+	cd $(TILED2GBA_PLAYER_LIB) && make
 
 $(MIDI_BINARIES): %.bin : %.mid $(MIDI2GBA_CONVERTER)
 	$(MIDI2GBA_CONVERTER) $< $@
