@@ -9,6 +9,17 @@ TOOLS_DIR  := tools
 BUILD_DIR  := build
 SPECS      := -specs=gba.specs
 
+# Find all additional build tools
+
+BUILD_MAIN_TEST_FILE := $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh
+TILED2GBA_DIR := $(TOOLS_DIR)/tiled2gba
+TILED2GBA := $(TILED2GBA_DIR)/build/Tiled2GBA
+MIDI2GBA_DIR := $(TOOLS_DIR)/midi2gba
+MIDI2GBA_CONVERTER_DIR := $(MIDI2GBA_DIR)/converter
+MIDI2GBA_CONVERTER := $(MIDI2GBA_CONVERTER_DIR)/build/MIDI2GBA
+MIDI2GBA_PLAYER_DIR := $(MIDI2GBA_DIR)/player
+MIDI2GBA_PLAYER_LIB := $(MIDI2GBA_PLAYER_DIR)/lib/gbaAudio
+
 # Compilation settings
 
 CROSS	?= arm-none-eabi-
@@ -19,18 +30,13 @@ OBJCOPY	:= $(CROSS)objcopy
 
 ARCH	:= -mthumb-interwork -mthumb
 
-INCFLAGS := -I$(LIB_DIR)/libtonc/include -I$(LIB_DIR)/minunit
-LIBFLAGS := -L$(LIB_DIR)/libtonc/lib -ltonc
+INCFLAGS := -I$(LIB_DIR)/libtonc/include -I$(LIB_DIR)/minunit -I$(MIDI2GBA_PLAYER_LIB)/include
+LIBFLAGS := -L$(LIB_DIR)/libtonc/lib -ltonc -L$(MIDI2GBA_PLAYER_LIB)/lib -lgbaAudio
 ASFLAGS	:= -mthumb-interwork
 CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(INCFLAGS) $(LIBFLAGS)
 LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
 
 .PHONY : build clean
-
-# Find all additional build tools
-
-BUILD_MAIN_TEST_FILE := $(TOOLS_DIR)/minunit_test_builder/build_main_test_file.sh
-TILED2GBA := $(TOOLS_DIR)/tiled2gba/build/Tiled2GBA
 
 # Find and predetermine all relevant source files
 
@@ -48,11 +54,16 @@ GBFS_OUT     := content.gbfs
 MAP_ASSETS   := $(shell find $(SOURCE_DIR)/assets -name '*.tmx')
 MAP_BINARIES := $(MAP_ASSETS:%.tmx=%.bin)
 
+MIDI_ASSETS   := $(shell find $(SOURCE_DIR)/assets -name '*.mid')
+MIDI_BINARIES := $(MIDI_ASSETS:%.mid=%.bin)
+
 # Build commands and dependencies
 
-build : $(NAME).gba
+build : libs $(NAME).gba
 
-test : $(NAME)-test.gba
+test : libs $(NAME)-test.gba
+
+libs: $(MIDI2GBA_PLAYER_LIB) $(LIB_DIR)/libtonc
 
 $(NAME).gba : $(NAME)-no_content.gba $(GBFS_OUT)
 	cat $^ > $@
@@ -88,18 +99,41 @@ $(TEST_MAIN_OBJECT) : $(TEST_MAIN_SOURCE)
 $(TEST_MAIN_SOURCE) : $(TEST_OBJECTS) $(BUILD_MAIN_TEST_FILE)
 	$(BUILD_MAIN_TEST_FILE) $(SOURCE_DIR)/app
 
-$(GBFS_OUT) : $(MAP_BINARIES)
+$(GBFS_OUT) : $(MAP_BINARIES) $(MIDI_BINARIES)
 	gbfs $@ $^
 
-$(MAP_BINARIES) : %.bin : %.tmx
+$(MAP_BINARIES) : %.bin : %.tmx $(TILED2GBA)
 	$(TILED2GBA) $< $@ --binary
+
+$(TILED2GBA):
+	mkdir $(TILED2GBA_DIR)/build
+	cd $(TILED2GBA_DIR)/build && cmake ..
+	cd $(TILED2GBA_DIR)/build && make
+
+$(MIDI_BINARIES): %.bin : %.mid $(MIDI2GBA_CONVERTER)
+	$(MIDI2GBA_CONVERTER) $< $@
+
+$(MIDI2GBA_CONVERTER):
+	mkdir $(MIDI2GBA_CONVERTER_DIR)/build
+	cd $(MIDI2GBA_CONVERTER_DIR)/build && cmake ..
+	cd $(MIDI2GBA_CONVERTER_DIR)/build && make
+
+$(MIDI2GBA_PLAYER_LIB): $(MIDI2GBA_PLAYER_LIB)/lib
+
+$(MIDI2GBA_PLAYER_LIB)/lib:
+	cd $(MIDI2GBA_PLAYER_LIB) && make
+
+$(LIB_DIR)/libtonc: $(LIB_DIR)/libtonc/lib
+
+$(LIB_DIR)/libtonc/lib:
+	cd $(LIB_DIR)/libtonc && make
 
 clean :
 	@rm -fv *.gba
 	@rm -fv *.elf
 	@rm -fv *.sav
 	@rm -fv *.gbfs
-	@rm -fv $(MAP_BINARIES)
+	@rm -fv $(MAP_BINARIES) $(MIDI_BINARIES)
 	@rm -rf $(APP_OBJECTS) $(TEST_OBJECTS)
 	@rm -rf $(APP_MAIN_OBJECT) $(TEST_MAIN_OBJECT)
 	@rm -rf $(TEST_MAIN_SOURCE)

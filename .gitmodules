@@ -7,3 +7,6 @@
 [submodule "tools/tiled2gba"]
 	path = tools/tiled2gba
 	url = git@github.com:LucvandenBrand/Tiled2GBA.git
+[submodule "tools/midi2gba"]
+	path = tools/midi2gba
+	url = git@github.com:LucvandenBrand/MIDI2GBA.git
