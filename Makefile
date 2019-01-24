@@ -34,8 +34,8 @@ OBJCOPY	:= $(CROSS)objcopy
 
 ARCH	:= -mthumb-interwork -mthumb
 
-INCFLAGS := -I$(LIB_DIR)/libtonc/include -I$(LIB_DIR)/minunit -I$(MIDI2GBA_PLAYER_LIB)/include -I$(TILED2GBA_PLAYER_LIB)/include
-LIBFLAGS := -L$(LIB_DIR)/libtonc/lib -ltonc -L$(MIDI2GBA_PLAYER_LIB)/lib -lgbaAudio -L$(TILED2GBA_PLAYER_LIB)/lib -lgbaMap
+INCFLAGS := -I$(LIB_DIR)/libtonc/include -I$(LIB_DIR)/minunit -I$(MIDI2GBA_PLAYER_LIB)/include -I$(TILED2GBA_PLAYER_LIB)/include -I$(LIB_DIR)/gbfs/include
+LIBFLAGS := -L$(LIB_DIR)/libtonc/lib -ltonc -L$(MIDI2GBA_PLAYER_LIB)/lib -lgbaAudio -L$(TILED2GBA_PLAYER_LIB)/lib -lgbaMap -L$(LIB_DIR)/gbfs/lib -lgbfs
 ASFLAGS	:= -mthumb-interwork
 CFLAGS	:= $(ARCH) -O2 -Wall -fno-strict-aliasing $(INCFLAGS) $(LIBFLAGS)
 LDFLAGS	:= $(ARCH) $(SPECS) $(LIBFLAGS)
@@ -67,7 +67,7 @@ build : libs $(NAME).gba
 
 test : libs $(NAME)-test.gba
 
-libs: $(MIDI2GBA_PLAYER_LIB) $(TILED2GBA_PLAYER_LIB) $(LIB_DIR)/libtonc
+libs: $(MIDI2GBA_PLAYER_LIB) $(TILED2GBA_PLAYER_LIB) $(LIB_DIR)/libtonc $(LIB_DIR)/gbfs
 
 $(NAME).gba : $(NAME)-no_content.gba $(GBFS_OUT)
 	cat $^ > $@
@@ -136,6 +136,11 @@ $(LIB_DIR)/libtonc: $(LIB_DIR)/libtonc/lib
 
 $(LIB_DIR)/libtonc/lib:
 	cd $(LIB_DIR)/libtonc && make
+
+$(LIB_DIR)/gbfs: $(LIB_DIR)/gbfs/lib
+
+$(LIB_DIR)/gbfs/lib:
+	cd $(LIB_DIR)/gbfs && make
 
 clean :
 	@rm -fv *.gba
