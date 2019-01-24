@@ -29,3 +29,7 @@ source/app/main.test.c
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Editor files
+.idea
+.vscode
