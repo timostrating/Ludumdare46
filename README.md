@@ -1,4 +1,9 @@
-# GBA Project Template
+# Ludum Dare 46: based on the GBA Project Template
+this project is based on a template created by the work of Tonc and Luc van den Brand: https://github.com/LucvandenBrand/GBA_Project_Template
+
+</br>
+
+#GBA Project Template
 This repository contains a basic setup for building structured and test-driven Game Boy Advance (GBA) applications.
 
 ## Project structure
