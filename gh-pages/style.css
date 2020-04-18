@@ -1,0 +1,38 @@
+html{
+	margin:0;
+	padding:0;
+}
+
+body {
+	margin:0;
+	padding:0;
+	background-color: rgba(143, 103, 179);
+	-webkit-user-select:none;
+	-moz-user-select:none;
+	user-select:none;
+}
+
+#container {
+	width: 480px;
+    height: 320px;
+    border: none;
+    margin: 0 auto;
+}
+
+
+.console {
+	margin: 20px auto;
+    text-align: center;
+    width: 530px;
+    height: 410px;
+    padding: 50px 80px;
+    border-radius: 73px;
+    background-color: rgb(81, 78, 158);
+}
+
+.screen {
+	padding: 25px;
+    padding-bottom: 70px;
+    border-radius: 25px 25px 80px 80px;
+    background-color: rgb(32, 32, 50);
+}
