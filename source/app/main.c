@@ -23,6 +23,88 @@
 //     return loadAudioFromROM(audioData);
 // }
 
+u16 g_winh[SCREEN_HEIGHT+1];
+
+//! Create an array of horizontal offsets for a circular window.
+/*! The offsets are to be copied to REG_WINxH each HBlank, either
+*     by HDMA or HBlank isr. Offsets provided by modified
+*     Bresenham's circle routine (of course); the clipping code is not
+*     optional.
+*   \param winh Pointer to array to receive the offsets.
+*   \param x0   X-coord of circle origin.
+*   \param y0   Y-coord of circle origin.
+*   \param rr   Circle radius.
+*/
+void win_circle(u16 winh[], int x0, int y0, int rr)
+{
+    int x=0, y= rr, d= 1-rr;
+    u32 tmp;
+
+    // clear the whole array first.
+    memset16(winh, 0, SCREEN_HEIGHT+1);
+
+    while(y >= x)
+    {
+        // Side octs
+        tmp  = clamp(x0+y, 0, SCREEN_WIDTH);
+        tmp += clamp(x0-y, 0, SCREEN_WIDTH)<<8;
+
+        if(IN_RANGE(y0-x, 0, SCREEN_HEIGHT))       // o4, o7
+            winh[y0-x]= tmp;
+        if(IN_RANGE(y0+x, 0, SCREEN_HEIGHT))       // o0, o3
+            winh[y0+x]= tmp;
+
+        // Change in y: top/bottom octs
+        if(d >= 0)
+        {
+            tmp  = clamp(x0+x, 0, SCREEN_WIDTH);
+            tmp += clamp(x0-x, 0, SCREEN_WIDTH)<<8;
+
+            if(IN_RANGE(y0-y, 0, SCREEN_HEIGHT))   // o5, o6
+                winh[y0-y]= tmp;
+            if(IN_RANGE(y0+y, 0, SCREEN_HEIGHT))   // o1, o2
+                winh[y0+y]= tmp;
+
+            d -= 2*(--y);
+        }
+        d += 2*(x++)+3;
+    }
+    winh[SCREEN_HEIGHT]= winh[0];
+}
+
+void init_main() {
+    // Init BG 2 (basic bg)
+//    dma3_cpy(pal_bg_mem, brinPal, brinPalLen);
+//    dma3_cpy(tile_mem[0], brinTiles, brinTilesLen);
+//    dma3_cpy(se_mem[30], brinMap, brinMapLen);
+//
+//    REG_BG2CNT= BG_CBB(0)|BG_SBB(30);
+
+    // Init BG 1 (mask)
+    const TILE tile= {{
+      0xF2F3F2F3, 0x3F2F3F2F, 0xF3F2F3F2, 0x2F3F2F3F,
+      0xF2F3F2F3, 0x3F2F3F2F, 0xF3F2F3F2, 0x2F3F2F3F
+    }};
+
+    tile_mem[0][32]= tile;
+    pal_bg_bank[4][ 2]= RGB8(89, 95, 89);
+    pal_bg_bank[4][ 3]= RGB8(89, 95, 89);
+    pal_bg_bank[4][15]= RGB8(89, 95, 89);
+    se_fill(se_mem[29], 0x4020);
+//
+    REG_BG1CNT= BG_CBB(0)|BG_SBB(29);
+
+    // Init window
+    REG_WIN0H= SCREEN_WIDTH;
+    REG_WIN0V= SCREEN_HEIGHT;
+
+    // Enable stuff
+    REG_DISPCNT= DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_WIN0;
+    REG_WININ= WIN_BUILD(WIN_BG0|WIN_BG2, 0);
+    REG_WINOUT= WIN_BUILD(WIN_BG0|WIN_BG1, 0);
+}
+
+
 void setupGBA() {
     // set Display mode
     REG_DISPCNT= DCNT_MODE3 | DCNT_BG2;
@@ -47,7 +129,16 @@ void drawLighting(int x, int y) {
     m3_line(x + L3x, y + L3y,   x + L4x, y + L4y, CLR_YELLOW);
 }
 
+void ending() {
+    drawLighting(175, 40);
+    drawLighting(195, 50);
+    drawLighting(190, 80);
+    drawLighting(200, 120);
+    drawLighting(185, 100);
+    for(int i=0; i<60; i++) { vid_vsync(); }
+}
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef struct Line {
     u8 x1, y1;
@@ -166,15 +257,46 @@ Level levels[] = {
             ENERGY(I,14, K,14, K,2, I,10, A,10, A,2, K,2),
         },
     },
+    { // level 5
+        .nrLs=8, .ls={
+            LINE(E, 2, E, 6),
+            LINE(E-4, 2, E-4, 6),
+            LINE(E+4, 2, E+4, 6),
+            LINE(E-4, 6, E+4, 6),
+            LINE(E-3, 6, E-3, 14),
+            LINE(E+3, 6, E+3, 14),
+
+            LINE(A, 14, C, 10),
+            LINE(C, 10, K, 10),
+        },
+        .nrGs=6, .gs={
+            GATE(E, 4, true),
+            GATE(E-3, 10, false),
+            GATE(E+3, 10, false),
+            GATE(E-3, 6, false),
+            GATE(E+3, 6, false),
+            GATE(I-1, 10, true),
+        },
+        .nrEs=6, .es={
+            ENERGY(I,2, E,2, E,6, E-4,6, E-4,2, A,2, A,14), // kills 1
+            ENERGY(I,2, E,2, E,6, E+4,6, E+4,2, A,2, A,14), // kills 1
+            ENERGY(K,10, K,14, E+3,14, E+3,6, E-4,6, E-4,2, A,2),
+            ENERGY(A,9, A,14, C,10, K,10, K,2, A,2, K,2),
+            ENERGY(K,2, K,14, A,14, A,2, K,2, K,14, K,2),
+            ENERGY(A,12, A,2, K,2, K,14, A,14, A,2, K,2),
+        },
+    },
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool playLevel(u8 lvl) {
 
-    int CLR_BACKGROUND = RGB8(31, 119, 77);
+    int CLR_BACKGROUND = RGB8(123, 146, 132);
     int CLR_LINE = RGB8(155, 199, 84);
-    int CLR_ENERGY = RGB8(50, 50, 180);
-    int CLR_GATE = RGB8(50, 50, 180);
-    int CLR_GATE_DONE = RGB8(50, 180, 50);
+    int CLR_ENERGY = RGB8(255, 255, 20);
+    int CLR_GATE = RGB8(0, 0, 0);
+    int CLR_GATE_DONE = CLR_ENERGY;
 
     bool horizontalState = true;
     Level level = levels[lvl];
@@ -185,7 +307,6 @@ bool playLevel(u8 lvl) {
 
     while (true) {
         vid_vsync();
-
         key_poll();
 
         if (key_tri_vert() != 0 && frame - inputFrame > 10) {
@@ -199,15 +320,23 @@ bool playLevel(u8 lvl) {
 
         m3_fill(CLR_BACKGROUND);
 
-        m3_frame(20, 20, 240-20, 160-20, CLR_LINE);
+        m3_frame(20, 20, 240-20, 160-20, CLR_LINE - (frame % 5));
 
         // Lines
         Line* l = &(level.ls[0]);
         for (int i=0; i<level.nrLs; i++) {
             l = &(level.ls[i]);
-            m3_line(l->x1, l->y1, l->x2, l->y2, CLR_LINE);
+            m3_line(l->x1, l->y1, l->x2, l->y2, CLR_LINE - (frame % 5));
         }
 
+        if (lvl == 4) {
+            for (int i=51; i<110; i+=3) {
+                m3_plot(179, i, RGB8(70, 70, 70));
+                m3_plot(201, i, RGB8(70, 70, 70));
+
+            }
+            m3_rect(180,50, 200, 110, RGB8(50, 50, 50));
+        }
 
         // Gates
         Gate* g = &(level.gs[0]);
@@ -225,7 +354,7 @@ bool playLevel(u8 lvl) {
             e = &(level.es[i]);
 
             m3_rect(e->x-2,e->y-2, e->x+2,e->y+2, CLR_ENERGY);
-            m3_rect(e->x-1,e->y-1, e->x+1,e->y+1, CLR_ENERGY + (e->x % 7) * 5);
+            m3_rect(e->x-1,e->y-1, e->x+1,e->y+1, CLR_ENERGY - ((e->x % 7) + (e->y % 7)));
 
             if (e->x == e->pos[e->index*2] && e->y == e->pos[e->index*2+1]) {e->index += 1;}
             e->x = (e->x < e->pos[e->index*2  ])? ++e->x : ((e->x == e->pos[e->index*2  ])? e->x : --e->x);
@@ -234,12 +363,16 @@ bool playLevel(u8 lvl) {
             for (int i=0; i<level.nrGs; i++) {
                 g = &(level.gs[i]);
                 if (!g->done && e->x == g->x && e->y == g->y) {
-                    if ((g->horizontal == horizontalState) != (e->y == e->pos[e->index * 2 + 1])) { return false; }
+                    if ((g->horizontal == horizontalState) != (e->y == e->pos[e->index * 2 + 1])) {
+                        drawLighting(g->x -4, g->y -8);
+                        for(int i=0; i<30; i++) { vid_vsync(); }
+                        return false;
+                    }
                     else {
                         g->done = true;
-//                        drawLighting(g->x, g->y);
-//                        vid_vsync();
-                        if (--gates <= 0) { return true; }
+                        vid_vsync();
+
+                        if (--gates <= 0) { if (lvl == 4) { ending(); } return true; }
                     }
                 }
             }
@@ -252,6 +385,7 @@ bool playLevel(u8 lvl) {
 }
 
 void youWin() {
+    setupGBA();
     REG_DISPCNT = DCNT_MODE0 | DCNT_BG0;
     tte_init_se_default(0, BG_CBB(0) | BG_SBB(31));
     vid_vsync();
@@ -260,7 +394,7 @@ void youWin() {
     tte_write("You win!");
 
     while (!KEY_DOWN_NOW(KEY_ANY));
-    main();
+    play();
 }
 
 void youLose() {
@@ -272,7 +406,7 @@ void youLose() {
     tte_write("You Lose!");
 
     while (!KEY_DOWN_NOW(KEY_ANY));
-    main();
+    play();
 }
 
 bool gameLoop() {
@@ -280,10 +414,8 @@ bool gameLoop() {
     int level = 0;
     int highest = 0;
     while (true) {
-        setupGBA();
         bool hasWon = playLevel(level);
 
-        if (level == 5) { return true; }
         if (hasWon == false) {
             if (highest > level)
                 return false;
@@ -293,11 +425,28 @@ bool gameLoop() {
             if (highest < level)
                 highest = level;
         }
+        if (level > 4) { return true; }
+
     }
 }
 
-int main() {
+void transition() {
+    int x0=120, y0=80;
 
+    init_main();
+    int frame = 0;
+
+    while(frame < 150) {
+        vid_vsync();
+
+        win_circle(g_winh, x0, y0, frame);
+        DMA_TRANSFER(&REG_WIN0H, &g_winh[1], 1, 3, DMA_HDMA);
+
+        frame++;
+    }
+}
+
+int play() {
     REG_DISPCNT = DCNT_MODE0 | DCNT_BG0;
     tte_init_se_default(0, BG_CBB(0) | BG_SBB(31));
 
@@ -315,4 +464,20 @@ int main() {
 
     while(1);
     return 0;
+}
+
+int main() {
+    
+    const unsigned short berkPal[16]=
+    {
+        RGB8(123, 146, 132),0x039C,0x031C,0x029C,0x021C,0x019C,0x0000,0x0000,
+        0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
+    };
+
+    memcpy16(pal_bg_mem, berkPal, 32/4);
+
+    init_main();
+//    transition();
+
+    play();
 }
