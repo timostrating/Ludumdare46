@@ -128,12 +128,42 @@ Level levels[] = {
         },
         .nrGs=4, .gs={
             GATE(F-3, 6, true),
-            GATE(F-3, 10, true),
-            GATE(F+3, 6, true),
+            GATE(F-3, 10, false),
+            GATE(F+3, 6, false),
             GATE(F+3, 10, true),
         },
-        .nrEs=1, .es={
+        .nrEs=4, .es={
             ENERGY(F,2, K,2, K,14, A,14, A,2, K,2, 0,0),
+            ENERGY(I,2, A,2, A,6,  K,6, K,12, K,2, A,2),
+            ENERGY(F,14, F+3,14, F+3,2, F-3,2, F-3,12, A,12, A,2), // kills 1 2 3 4
+            ENERGY(A,12, A,2, K,2, K,14, A,14, A,2, K,2),
+        },
+    },
+    { // level 4
+        .nrLs=8, .ls={
+            LINE(A, 6, I, 6),
+            LINE(I, 6, K, 2),
+            LINE(A, 10, I, 10),
+            LINE(I, 10, K, 6),
+            LINE(K, 12, G, 12),
+            LINE(G, 12, G, 2),
+            LINE(E, 2, E, 14),
+            LINE(F-5, 2, F-5, 14),
+        },
+        .nrGs=6, .gs={
+            GATE(F-2, 6, false),
+            GATE(F-2, 10, true),
+            GATE(F-5, 6, false),
+            GATE(F-5, 10, true),
+            GATE(F+2,   6, true),
+            GATE(F+2,   10, false),
+        },
+        .nrEs=4, .es={
+            ENERGY(K,9, K,2, I,6, A,6, A,2, K,2, K,14),
+            ENERGY(B,14, F-2,14, F-2,2, A,2, A,14, K,14, K,2),
+            ENERGY(A,13, A,2, A,10, I,10, K,6, K,14, A,14),
+            ENERGY(A,6, A,2, K,2, K,14, A,14, A,2, K,2),
+            ENERGY(I,14, K,14, K,2, I,10, A,10, A,2, K,2),
         },
     },
 };
@@ -147,10 +177,11 @@ bool playLevel(u8 lvl) {
     int CLR_GATE_DONE = RGB8(50, 180, 50);
 
     bool horizontalState = true;
+    Level level = levels[lvl];
 
     int frame=0;
     int inputFrame=0;
-    int gates = levels[lvl].nrGs;
+    int gates = level.nrGs;
 
     while (true) {
         vid_vsync();
@@ -171,27 +202,27 @@ bool playLevel(u8 lvl) {
         m3_frame(20, 20, 240-20, 160-20, CLR_LINE);
 
         // Lines
-        Line* l = &(levels[lvl].ls[0]);
-        for (int i=0; i<levels[lvl].nrLs; i++) {
-            l = &(levels[lvl].ls[i]);
+        Line* l = &(level.ls[0]);
+        for (int i=0; i<level.nrLs; i++) {
+            l = &(level.ls[i]);
             m3_line(l->x1, l->y1, l->x2, l->y2, CLR_LINE);
         }
 
 
         // Gates
-        Gate* g = &(levels[lvl].gs[0]);
-        for (int i=0; i<levels[lvl].nrGs; i++) {
-            g = &(levels[lvl].gs[i]);
-            m3_rect(g->x-5,g->y-5, g->x+5,g->y+5, CLR_BACKGROUND);
+        Gate* g = &(level.gs[0]);
+        for (int i=0; i<level.nrGs; i++) {
+            g = &(level.gs[i]);
+            if (!g->done)m3_rect(g->x-5,g->y-5, g->x+5,g->y+5, CLR_BACKGROUND);
             if (g->horizontal == horizontalState) { m3_rect(g->x-5,g->y-1, g->x+5,g->y+1, (g->done)? CLR_GATE_DONE : CLR_GATE); }
             else                                  { m3_rect(g->x-1,g->y-5, g->x+1,g->y+5, (g->done)? CLR_GATE_DONE : CLR_GATE); }
         }
 
 
         // Energies
-        Energy* e = &(levels[lvl].es[0]);
-        for (int i=0; i<levels[lvl].nrEs; i++) {
-            e = &(levels[lvl].es[i]);
+        Energy* e = &(level.es[0]);
+        for (int i=0; i<level.nrEs; i++) {
+            e = &(level.es[i]);
 
             m3_rect(e->x-2,e->y-2, e->x+2,e->y+2, CLR_ENERGY);
             m3_rect(e->x-1,e->y-1, e->x+1,e->y+1, CLR_ENERGY + (e->x % 7) * 5);
@@ -200,12 +231,14 @@ bool playLevel(u8 lvl) {
             e->x = (e->x < e->pos[e->index*2  ])? ++e->x : ((e->x == e->pos[e->index*2  ])? e->x : --e->x);
             e->y = (e->y < e->pos[e->index*2+1])? ++e->y : ((e->y == e->pos[e->index*2+1])? e->y : --e->y);
 
-            for (int i=0; i<levels[lvl].nrGs; i++) {
-                g = &(levels[lvl].gs[i]);
-                if (e->x == g->x && e->y == g->y) {
+            for (int i=0; i<level.nrGs; i++) {
+                g = &(level.gs[i]);
+                if (!g->done && e->x == g->x && e->y == g->y) {
                     if ((g->horizontal == horizontalState) != (e->y == e->pos[e->index * 2 + 1])) { return false; }
                     else {
                         g->done = true;
+//                        drawLighting(g->x, g->y);
+//                        vid_vsync();
                         if (--gates <= 0) { return true; }
                     }
                 }
@@ -242,6 +275,27 @@ void youLose() {
     main();
 }
 
+bool gameLoop() {
+    setupGBA();
+    int level = 0;
+    int highest = 0;
+    while (true) {
+        setupGBA();
+        bool hasWon = playLevel(level);
+
+        if (level == 5) { return true; }
+        if (hasWon == false) {
+            if (highest > level)
+                return false;
+            level--;
+        } else {
+            level++;
+            if (highest < level)
+                highest = level;
+        }
+    }
+}
+
 int main() {
 
     REG_DISPCNT = DCNT_MODE0 | DCNT_BG0;
@@ -255,17 +309,9 @@ int main() {
 
     while (!KEY_DOWN_NOW(KEY_ANY));
 
-
-    setupGBA();
-    int level = 0;
-    while (true) {
-        setupGBA();
-        bool hasWon = playLevel(level);
-        level++;
-
-        if (level == 5) { youWin(); }
-        if (hasWon == false) { youLose(); }
-    }
+    bool game = gameLoop();
+    if (game) youWin();
+    else youLose();
 
     while(1);
     return 0;
