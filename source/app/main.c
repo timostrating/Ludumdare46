@@ -46,29 +46,73 @@ void drawLighting(int x, int y) {
     m3_line(x + L2x, y + L2y,   x + L3x, y + L3y, CLR_YELLOW);
     m3_line(x + L3x, y + L3y,   x + L4x, y + L4y, CLR_YELLOW);
 }
+typedef struct Level {
+    Energy energies;
+    Gate gates;
+} Level;
 
-const int CLR_BACKGROUND = 0x0000;
-const int CLR_LINE = 0x1111;
-const int CLR_ENERGY = 0x2222;
+typedef struct Energy {
+    u8 index;
+    u8 x, y;
+    u8 pos[10];
+} Energy;
 
-void playLevel() {
+typedef struct Gate {
+    u8 x, y;
+    bool horizontal;
+} Gate;
 
-    int x=0, y=20;
+
+Energy e = (Energy){.index=0, .x=20, .y=20, .pos={220,20, 220,80, 20,80} };
+Gate g = (Gate){.x=120, .y=80, .horizontal=true};
+
+bool playLevel(u8 level) {
+
+    int CLR_BACKGROUND = RGB8(31, 119, 77);
+    int CLR_LINE = RGB8(155, 199, 84);
+    int CLR_ENERGY = RGB8(50, 50, 180);
+    int CLR_GATE = RGB8(50, 50, 180);
+
+    bool flipState = true;
+
+    int frame=0;
+    int inputFrame=0;
     while (true) {
         vid_vsync();
+
         key_poll();
+
+        if (key_tri_horz() != 0 && frame - inputFrame > 10) {
+            inputFrame = frame;
+            flipState = !flipState;
+        }
+
         m3_fill(CLR_BACKGROUND);
 
         m3_frame(20, 20, 240-20, 160-20, CLR_LINE);
 
-        m3_vline(100, 20, 160-20, CLR_LINE);
-        m3_vline(140, 20, 160-20, CLR_LINE);
+//        m3_vline(100, 20, 160-20, CLR_LINE);
+//        m3_vline(140, 20, 160-20, CLR_LINE);
         m3_hline(20, 80, 240-20, CLR_LINE); // hline x1, y, x2
 
-        m3_rect(x-1,y-1, x+1,y+1, CLR_ENERGY);
-        x++;
-        x %= 240;
+
+        // gates
+        m3_rect(g.x-5,g.y-5, g.x+5,g.y+5, CLR_BACKGROUND);
+        if (g.horizontal == flipState) { m3_rect(g.x-5,g.y-1, g.x+5,g.y+1, CLR_ENERGY); }
+        else                           { m3_rect(g.x-1,g.y-5, g.x+1,g.y+5, CLR_ENERGY); }
+
+
+        // Energies
+        m3_rect(e.x-2,e.y-2, e.x+2,e.y+2, CLR_ENERGY);
+
+        if (e.x == e.pos[e.index*2] && e.y == e.pos[e.index*2+1]) {e.index += 1;}
+        e.x = (e.x < e.pos[e.index*2  ])? ++e.x : ((e.x == e.pos[e.index*2  ])? e.x : --e.x);
+        e.y = (e.y < e.pos[e.index*2+1])? ++e.y : ((e.y == e.pos[e.index*2+1])? e.y : --e.y);
+
+        frame++;
     }
+
+    return true;
 }
 
 int main() {
@@ -86,7 +130,29 @@ int main() {
 
 
     setupGBA();
-    playLevel();
+    int level = 1;
+    while (true) {
+        bool hasWon = playLevel(level);
+        if (hasWon == false) {
+            break;
+        }
+    }
+
+//    REG_DISPCNT = DCNT_MODE0 | DCNT_BG0;
+//    tte_init_se_default(0, BG_CBB(0) | BG_SBB(31));
+//    vid_vsync();
+//
+//    tte_write("#{P:62,64}");
+//    tte_write("You Lose!");
+
+
+
+//    REG_DISPCNT = DCNT_MODE0 | DCNT_BG0;
+//    tte_init_se_default(0, BG_CBB(0) | BG_SBB(31));
+//    vid_vsync();
+//
+//    tte_write("#{P:62,64}");
+//    tte_write("You win!");
 
     while(1);
     return 0;
