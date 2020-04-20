@@ -16,7 +16,7 @@
 				setInterval(function() {
 					document.getElementById("container").focus();
 				}, 250);
-				fetch("docs/KeepTheGameBoyAlive.gba").then(response => {
+				fetch("https://github.com/timostrating/Ludumdare46/raw/master/docs/KeepTheGameBoyAlive.gba").then(response => {
 					console.log("KeepTheGameBoyAlive fetched")
 					console.log(response);
 					return response.arrayBuffer();
@@ -24,7 +24,7 @@
 					console.log("buffer loaded");
 					console.log(buffer);
 					ROMDATA = buffer;
-					ROMFILENAME = "docs/KeepTheGameBoyAlive.gba";
+					ROMFILENAME = "KeepTheGameBoyAlive.gba";
 
 
 					// DISPLAYING THE EMULATOR CONTAINER
