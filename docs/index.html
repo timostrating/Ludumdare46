@@ -16,7 +16,7 @@
 				setInterval(function() {
 					document.getElementById("container").focus();
 				}, 250);
-				fetch("KeepTheGameBoyAlive.gba").then(response => {
+				fetch("docs/KeepTheGameBoyAlive.gba").then(response => {
 					console.log("KeepTheGameBoyAlive fetched")
 					console.log(response);
 					return response.arrayBuffer();
@@ -51,7 +51,7 @@
 
 		<div class="gui_menu_fileloader">
 
-			<a id="download-button" href="KeepTheGameBoyAlive.gba" download>
+			<a id="download-button" href="https://github.com/timostrating/Ludumdare46/raw/master/docs/KeepTheGameBoyAlive.gba" download>
 				Download KeepTheGameBoyAlive.gba
 			</a>
 
