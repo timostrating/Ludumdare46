@@ -1,7 +1,13 @@
 # Ludum Dare 46: based on the GBA Project Template
-this project is based on a template created by the work of Tonc and Luc van den Brand: https://github.com/LucvandenBrand/GBA_Project_Template
+Download the rom here:
+https://github.com/timostrating/Ludumdare46/raw/master/docs/KeepTheGameBoyAlive.gba
+
+Play on a web emulator here:
+https://timostrating.github.io/Ludumdare46/
 
 </br>
+
+this project is based on a template created by the work of Tonc and Luc van den Brand: https://github.com/LucvandenBrand/GBA_Project_Template
 
 # GBA Project Template
 This repository contains a basic setup for building structured and test-driven Game Boy Advance (GBA) applications.
