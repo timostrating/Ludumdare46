@@ -3,7 +3,7 @@ this project is based on a template created by the work of Tonc and Luc van den 
 
 </br>
 
-#GBA Project Template
+# GBA Project Template
 This repository contains a basic setup for building structured and test-driven Game Boy Advance (GBA) applications.
 
 ## Project structure
