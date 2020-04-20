@@ -309,9 +309,9 @@ bool playLevel(u8 lvl) {
         vid_vsync();
         key_poll();
 
-        if (key_tri_vert() != 0 && frame - inputFrame > 10) {
-            return true;
-        }
+//        if (key_tri_vert() != 0 && frame - inputFrame > 10) {
+//            return true;
+//        }
 
         if (key_tri_horz() != 0 && frame - inputFrame > 10) {
             inputFrame = frame;
@@ -477,7 +477,7 @@ int main() {
     memcpy16(pal_bg_mem, berkPal, 32/4);
 
     init_main();
-//    transition();
+    transition();
 
     play();
 }
