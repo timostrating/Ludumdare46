@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>Save The GameBoy!</title>
-		<link rel="stylesheet" href="gh-pages/style.css">
+		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
 		<script>
@@ -16,15 +16,15 @@
 				setInterval(function() {
 					document.getElementById("container").focus();
 				}, 250);
-				fetch("GBAProject.gba").then(response => {
-					console.log("GBAProject fetched")
+				fetch("KeepTheGameBoyAlive.gba").then(response => {
+					console.log("KeepTheGameBoyAlive fetched")
 					console.log(response);
 					return response.arrayBuffer();
 				}).then(buffer => {
 					console.log("buffer loaded");
 					console.log(buffer);
 					ROMDATA = buffer;
-					ROMFILENAME = "GBAProject.gba";
+					ROMFILENAME = "KeepTheGameBoyAlive.gba";
 
 
 					// DISPLAYING THE EMULATOR CONTAINER
@@ -32,7 +32,7 @@
 					document.getElementById("container").focus();
 
 					// CLEARING THE SELECTED FILE VALUE
-					document.getElementById("container").src = "gh-pages/Emulatrix_GameBoyAdvance.htm";
+					document.getElementById("container").src = "Emulatrix_GameBoyAdvance.htm";
 					document.getElementById("container").onload = () => {
                         console.log("Loaded");
 					}
@@ -50,8 +50,8 @@
         </div>
 
 		<div class="gui_menu_fileloader">
-			<a id="download-button" href="GBAProject.gba" download>
-				Download GBaProject.gba
+			<a id="download-button" href="KeepTheGameBoyAlive.gba" download>
+				Download KeepTheGameBoyAlive.gba
 			</a>
 		</div>
 	</body>
