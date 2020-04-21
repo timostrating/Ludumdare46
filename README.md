@@ -1,11 +1,19 @@
 # Ludum Dare 46: based on the GBA Project Template
-Download the rom here:
-https://github.com/timostrating/Ludumdare46/raw/master/docs/KeepTheGameBoyAlive.gba
+<p align="center">
+  <img src="https://github.com/timostrating/Ludumdare46/raw/master/gba.gif" alt="rug" width="600" height="400">
+</p>
 
-Play on a web emulator here:
-https://timostrating.github.io/Ludumdare46/
+<p align="center">
+  Download the rom here:
+  https://github.com/timostrating/Ludumdare46/raw/master/docs/KeepTheGameBoyAlive.gba
+</p>
 
-</br>
+<p align="center">
+  Play on a web emulator here:
+  https://timostrating.github.io/Ludumdare46/
+</p>
+
+</br></br></br>
 
 this project is based on a template created by the work of Tonc and Luc van den Brand: https://github.com/LucvandenBrand/GBA_Project_Template
 
